@@ -5,11 +5,12 @@ import movieTrailer from "movie-trailer";
 import "./Row.css";
 
 const base_url = "https://image.tmdb.org/t/p/original/";
-function Row({ title, fetchUrl, isLargeRow, hidePreviews }) {
+function Row({ title, fetchUrl, isLargeRow, hidePreviews, previewId }) {
   const [movies, setMovies] = useState([]);
   const [trailerUrl, setTrailerUrl] = useState("");
   const [playingId, setPlayingId] = useState(null);
   const [trailerError, setTrailerError] = useState(false);
+  const [activeMovie, setActiveMovie] = useState("");
   useEffect(() => {
     async function fetchData() {
       const request = await axios.get(fetchUrl);
@@ -29,28 +30,22 @@ function Row({ title, fetchUrl, isLargeRow, hidePreviews }) {
   };
 
   const handleClick = (movie) => {
+    setActiveMovie(movie.id);
     hidePreviews(movie);
     setTrailerError(false);
-    console.log(trailerError);
+
     if (trailerUrl) {
       setTrailerUrl("");
       setPlayingId(null);
-
-      //setTrailerError(false);
     } else {
-      //console.log(movie);
       movieTrailer(movie.title || movie.name || "")
-        //movieTrailer(null, { tmdbId: movie.id } || "")
         .then((url) => {
           const urlParams = new URLSearchParams(new URL(url).search);
           setTrailerUrl(urlParams.get("v"));
           setPlayingId(movie.id);
         })
         .catch(() => {
-          //console.log("error")
-          //setTrailerUrl();
           setTrailerError(true);
-          //console.log(error)
         });
     }
   };
@@ -73,13 +68,15 @@ function Row({ title, fetchUrl, isLargeRow, hidePreviews }) {
           />
         ))}
       </div>
-      {/* {trailerError && <div className="trailer-error"></div>} */}
-      {trailerUrl && <YouTube videoId={trailerUrl} opts={opts} />}
-      {trailerError && (
+
+      {trailerUrl && previewId === activeMovie ? (
+        <YouTube videoId={trailerUrl} opts={opts} />
+      ) : null}
+      {trailerError && previewId === activeMovie ? (
         <div className="unavailable">
           <h1>Trailer Not Available</h1>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
